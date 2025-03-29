@@ -20,7 +20,6 @@ app.use(cors({
     allowedHeaders: ["Content-Type"]
 }));
 app.use(express.json());
-app.use("/files", express.static(UPLOAD_DIR)); // Serve static files
 
 // Multer setup for file storage
 const storage = multer.diskStorage({
@@ -43,7 +42,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     res.json({ message: "File uploaded successfully", filename: req.file.filename });
 });
 
-// API: Get uploaded files
+// API: Get uploaded files (moved above the static middleware)
 app.get("/files", (req, res) => {
     fs.readdir(UPLOAD_DIR, (err, files) => {
         if (err) {
@@ -55,7 +54,10 @@ app.get("/files", (req, res) => {
     });
 });
 
-// API: Serve files
+// Serve static files (this middleware now comes after the GET /files route)
+app.use("/files", express.static(UPLOAD_DIR));
+
+// (Optional) API: Serve individual file if needed
 app.get("/files/:filename", (req, res) => {
     const filePath = path.join(UPLOAD_DIR, req.params.filename);
     if (!fs.existsSync(filePath)) {
